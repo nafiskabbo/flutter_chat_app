@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: context.primaryColor,
       body: ImageView(
-        imagePath: Assets.imagesIcImageNotFound,
+        imagePath: Assets.logoAppLogo.path,
         color: context.onSurfaceColor,
         height: 64,
         width: 64,

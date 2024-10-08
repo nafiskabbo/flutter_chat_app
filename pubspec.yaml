@@ -48,7 +48,7 @@ flutter_gen:
       package_parameter_enabled: false
       style: camel-case
       class_name: Assets
-    exclude: [ assets/logo/app_logo.png ]
+    exclude: []
     # Optional
     integrations:
       flutter_svg: false
