@@ -12,6 +12,14 @@ class AuthService {
       if (response.user == null) {
         return 'Sign-up failed. Please try again.';
       }
+
+      // Add user to the 'users' table
+      final userId = response.user!.id;
+      await client.from('users').insert({
+        'id': userId,
+        'email': email,
+      });
+
       return null; // Sign-up successful
     } catch (e) {
       return e.toString(); // Return error message

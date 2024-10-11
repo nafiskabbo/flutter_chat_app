@@ -1,6 +1,7 @@
 import 'package:chat/config/my_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:chat/core/di/app_injections.dart';
 
@@ -18,5 +19,9 @@ Future<void> main() async {
   );
 
   await initAppInjections();
-  runApp(const MyApp());
+  runApp(
+    ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }

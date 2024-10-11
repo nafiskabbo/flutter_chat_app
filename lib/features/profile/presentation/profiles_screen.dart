@@ -1,77 +1,21 @@
 import 'package:chat/config/routes/routes.dart';
 import 'package:chat/features/auth/data/auth_service.dart';
+import 'package:chat/features/chat/presentation/chat_provider.dart';
+import 'package:chat/features/profile/presentation/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ProfilesScreen extends StatefulWidget {
+class ProfilesScreen extends ConsumerWidget {
   const ProfilesScreen({super.key});
 
   @override
-  State<ProfilesScreen> createState() => _ProfilesScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersAsyncValue = ref.watch(userProvider);
 
-class _ProfilesScreenState extends State<ProfilesScreen> {
-  List<dynamic> _users = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUsers();
-  }
-
-  Future<void> _fetchUsers() async {
-    // Fetch all users from the users table
-    final response = await Supabase.instance.client
-        .from('users')
-        .select('*')
-        .neq('id', Supabase.instance.client.auth.currentUser!.id); // Exclude the logged-in user
-
-    setState(() {
-      _users = response ?? [];
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _startChat(String otherUserId) async {
-    // Check if a chat already exists between the users
-    final existingChatResponse = await Supabase.instance.client
-        .from('chats')
-        .select('id')
-        .or('user_1.eq.$otherUserId, user_2.eq.$otherUserId')
-        .eq('user_1', Supabase.instance.client.auth.currentUser!.id)
-        .single();
-
-    String chatId;
-    if (existingChatResponse != null) {
-      chatId = existingChatResponse['id'];
-    } else {
-      // Create a new chat
-      final newChatResponse = await Supabase.instance.client
-          .from('chats')
-          .insert({
-            'user_1': Supabase.instance.client.auth.currentUser!.id,
-            'user_2': otherUserId,
-          })
-          .select()
-          .single();
-
-      chatId = newChatResponse['id'];
-    }
-
-    // Navigate to the chat screen
-    context.pushNamed(
-      Routes.chat.name,
-      pathParameters: {"chatId": chatId},
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profiles'),
+        title: const Text('Profiles'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -79,22 +23,61 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
               AuthService().signOut();
               context.goNamed(Routes.login.name);
             },
-          )
+          ),
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _users.length,
+      body: RefreshIndicator.adaptive(
+        onRefresh: () => ref.refresh(userProvider.future),
+        child: usersAsyncValue.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => const Center(child: Text('Failed to load users.')),
+          data: (users) {
+            if (users.isEmpty) {
+              return const Center(child: Text('No data available.'));
+            }
+            return ListView.builder(
+              itemCount: users.length,
               itemBuilder: (context, index) {
-                final user = _users[index];
+                final user = users[index];
                 return ListTile(
-                  title: Text('User ID: ${user['id']}'),
-                  subtitle: Text('Email: ${user['email']}'),
-                  onTap: () => _startChat(user['id']),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blueAccent,
+                    child: Icon(Icons.person),
+                  ),
+                  title: Text(user.email),
+                  subtitle: Text('User ID: ${user.id}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.message),
+                    onPressed: () => _startChat(context, ref, user.id ?? ''),
+                    tooltip: 'Send Message',
+                  ),
                 );
               },
-            ),
+            );
+          },
+        ),
+      ),
     );
+  }
+
+  // Function to start chat with another user
+  Future<void> _startChat(BuildContext context, WidgetRef ref, String otherUserId) async {
+    final startChatAsyncValue = ref.read(startChatProvider(otherUserId).future);
+
+    startChatAsyncValue.then((chatId) {
+      // Navigate to the chat screen with the obtained chat ID
+      if (context.mounted) {
+        context.pushNamed(
+          Routes.chat.name,
+          queryParameters: {"chatId": chatId},
+        );
+      }
+    }).catchError((error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting chat: $error')),
+        );
+      }
+    });
   }
 }

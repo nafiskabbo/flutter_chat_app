@@ -47,7 +47,6 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: context.primaryColor,
       body: ImageView(
         imagePath: Assets.logoAppLogo.path,
-        color: context.onSurfaceColor,
         height: 64,
         width: 64,
       ).center().withPadding(px32),
