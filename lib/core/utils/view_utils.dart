@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:chat/config/themes/theme_colors.dart';
-import 'package:chat/core/widgets/loading_view.dart';
-import 'package:go_router/go_router.dart';
-import 'package:chat/config/themes/styles.dart';
-import 'package:chat/config/themes/text_styles.dart';
-import 'package:chat/core/utils/common_utils.dart';
 
 extension ContextExt on BuildContext {
   // Size
@@ -58,127 +53,6 @@ extension ContextExt on BuildContext {
   void showErrorSnackBar(String message, {int durationInSeconds = 3}) {
     _showSnackBar(message, backgroundColor: errorColor, durationInSeconds: durationInSeconds);
   }
-
-  // Dialog
-  void showLoadingDialog() {
-    if (!mounted) return;
-    showDialog(
-      context: this,
-      barrierDismissible: false,
-      builder: (BuildContext context) => const LoadingView(),
-    );
-  }
-
-  void displayAlertDialog({
-    String? title,
-    required String content,
-    VoidCallback? onPositivePressed,
-    String positiveButtonText = 'OK',
-    VoidCallback? onNegativePressed,
-    String? negativeButtonText,
-  }) {
-    if (!mounted) return;
-    showDialog(
-      context: this,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: title == null
-              ? null
-              : Text(
-                  title,
-                  style: TextStyle(
-                      color: context.onSurfaceColor, fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-          content: Text(
-            content,
-            style: TextStyle(
-                color: context.onSurfaceColor, fontSize: 16, fontWeight: FontWeight.normal),
-          ),
-          contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 24, top: 16, bottom: 0),
-          actionsPadding: p16,
-          actions: [
-            TextButton(
-              onPressed: onNegativePressed ??
-                  () {
-                    pop();
-                  },
-              child: Text(negativeButtonText ?? "Cancel"),
-            ),
-            TextButton(
-              onPressed: onPositivePressed ??
-                  () {
-                    pop();
-                  },
-              child: Text(positiveButtonText),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<T?> showDialogNow<T extends Object?>({
-    bool barrierDismissible = true,
-    String title = 'Dialog',
-    ShapeBorder? shape,
-    EdgeInsets? insetPadding,
-    required Widget child,
-  }) async {
-    if (!mounted) return null;
-    return await showGeneralDialog<T>(
-      context: this,
-      barrierLabel: title,
-      barrierDismissible: barrierDismissible,
-      pageBuilder: (context, animation, secondaryAnimation) => SafeArea(
-        child: Dialog(
-          shape: shape ?? 16.roundedBorder(),
-          insetPadding:
-              insetPadding ?? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32.0),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  Future<T?> showBottomSheetNow<T>({
-    double topBorderRadius = 40,
-    required Widget child,
-  }) async {
-    if (!mounted) return null;
-    return await showModalBottomSheet(
-      context: this,
-      clipBehavior: Clip.hardEdge,
-      // backgroundColor: onTertiaryContainerColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: Radius.circular(topBorderRadius),
-          topEnd: Radius.circular(topBorderRadius),
-        ),
-      ),
-      builder: (BuildContext context) => child,
-    );
-  }
-
-  Future<T?> showPopupMenu<T>({
-    required TapDownDetails details,
-    required List<PopupMenuEntry<T>> menuItems,
-  }) async {
-    if (!mounted) return null;
-    final offset = details.globalPosition;
-
-    return await showMenu(
-      context: this,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy,
-        width - offset.dx,
-        height - offset.dy,
-      ),
-      shape: 12.roundedBorder(),
-      // color: onTertiaryContainerColor,
-      items: menuItems,
-    );
-  }
 }
 
 extension WidgetExt on Widget {
@@ -193,11 +67,3 @@ extension WidgetExt on Widget {
 
   Container container(Color color) => Container(color: color, child: this);
 }
-
-PopupMenuItem getMenuItem(BuildContext context, String text, void Function()? onTap) =>
-    PopupMenuItem(
-      value: text,
-      height: 40,
-      onTap: onTap,
-      child: Text(text, style: TextStyles.popupMenuTextStyle(context)),
-    );

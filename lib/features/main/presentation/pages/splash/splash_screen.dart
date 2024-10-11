@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:chat/config/gen/assets.gen.dart';
 import 'package:chat/config/routes/routes.dart';
 import 'package:chat/config/themes/decoration_styles.dart';
-import 'package:chat/config/themes/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/core/utils/view_utils.dart';
 import 'package:chat/core/widgets/image_view.dart';
@@ -45,11 +44,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
     return Scaffold(
       backgroundColor: context.primaryColor,
-      body: ImageView(
-        imagePath: Assets.logoAppLogo.path,
-        height: 64,
-        width: 64,
-      ).center().withPadding(px32),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Center(
+          child: ImageView(
+            imagePath: Assets.logoAppLogo.path,
+            height: 64,
+            width: 64,
+          ),
+        ),
+      ),
     );
   }
 }
